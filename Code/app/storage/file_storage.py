@@ -24,6 +24,9 @@ class FileStorage:
             保存成功返回True，否则返回False
         """
         try:
+            # 确保目录存在
+            os.makedirs(USERS_DIR, exist_ok=True)
+            
             user_file = os.path.join(USERS_DIR, f"{user.username}.json")
             with open(user_file, 'w', encoding='utf-8') as f:
                 json.dump(user.to_dict(), f, ensure_ascii=False, indent=4)
@@ -77,6 +80,15 @@ class FileStorage:
             保存成功返回True，否则返回False
         """
         try:
+            # 确保目录存在
+            os.makedirs(CHATS_DIR, exist_ok=True)
+            
+            # 确保metadata中包含persona_id（兼容旧版本）
+            if "persona" in chat.metadata and "persona_id" not in chat.metadata:
+                chat.metadata["persona_id"] = chat.metadata["persona"]
+            if "persona_id" not in chat.metadata:
+                chat.metadata["persona_id"] = "default"
+                
             chat_file = os.path.join(CHATS_DIR, f"{chat.chat_id}.json")
             with open(chat_file, 'w', encoding='utf-8') as f:
                 json.dump(chat.to_dict(), f, ensure_ascii=False, indent=4)
@@ -118,6 +130,9 @@ class FileStorage:
         """
         user_chats = []
         try:
+            # 确保目录存在
+            os.makedirs(CHATS_DIR, exist_ok=True)
+            
             for filename in os.listdir(CHATS_DIR):
                 if not filename.endswith(".json"):
                     continue
@@ -129,11 +144,14 @@ class FileStorage:
                     
                     # 只包含属于该用户的聊天
                     if metadata.get("user_id") == user_id:
+                        # 确保persona_id字段（兼容旧版本）
+                        persona_id = metadata.get("persona_id", metadata.get("persona", "default"))
+                        
                         chat_summary = {
                             "chat_id": chat_data.get("chat_id"),
                             "title": metadata.get("title", "无标题对话"),
                             "updated_at": chat_data.get("updated_at"),
-                            "persona": metadata.get("persona", "general")
+                            "persona_id": persona_id
                         }
                         user_chats.append(chat_summary)
             
@@ -155,6 +173,9 @@ class FileStorage:
             保存成功返回True，否则返回False
         """
         try:
+            # 确保目录存在
+            os.makedirs(PERSONAS_DIR, exist_ok=True)
+            
             persona_file = os.path.join(PERSONAS_DIR, f"{persona.persona_id}.json")
             with open(persona_file, 'w', encoding='utf-8') as f:
                 json.dump(persona.to_dict(), f, ensure_ascii=False, indent=4)
@@ -193,6 +214,9 @@ class FileStorage:
         """
         personas = {}
         try:
+            # 确保目录存在
+            os.makedirs(PERSONAS_DIR, exist_ok=True)
+            
             for filename in os.listdir(PERSONAS_DIR):
                 if not filename.endswith(".json"):
                     continue

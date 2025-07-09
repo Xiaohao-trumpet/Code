@@ -9,6 +9,11 @@ class Persona:
     description: str
     system_prompt: str
     created_at: str = field(default_factory=lambda: datetime.datetime.now().isoformat())
+    
+    @property
+    def id(self) -> str:
+        """提供id作为persona_id的别名，确保与新接口兼容"""
+        return self.persona_id
 
     @classmethod
     def from_dict(cls, persona_id: str, data: Dict[str, Any]) -> 'Persona':

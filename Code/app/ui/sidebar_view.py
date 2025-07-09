@@ -1,92 +1,99 @@
 import streamlit as st
+import uuid
 import logging
-from typing import Tuple, Dict, List, Any, Optional, Callable
+from typing import List, Dict, Any, Optional, Callable
 
 from app.chat.chat_manager import ChatManager
 from app.models.persona import Persona
+from app.ui.persona_view import PersonaView
 
 logger = logging.getLogger("xiaohaochat.ui.sidebar")
 
 class SidebarView:
-    """侧边栏UI组件，处理聊天历史、设置等功能"""
+    """侧边栏视图，包含设置、聊天历史等组件"""
     
-    def __init__(self, chat_manager: ChatManager, personas: Dict[str, Persona]):
-        self.chat_manager = chat_manager
-        self.personas = personas
-    
-    def render(self, username: str, user_id: str, 
-              current_chat_id: Optional[str], 
-              current_persona: str,
-              on_new_chat: Callable, 
-              on_chat_selected: Callable[[str], None],
-              on_logout: Callable,
-              on_persona_change: Callable[[str], None]) -> Tuple[bool, str]:
-        """渲染侧边栏界面
+    def __init__(self, chat_manager: ChatManager):
+        """初始化侧边栏视图
         
         Args:
-            username: 当前用户名
-            user_id: 当前用户ID
-            current_chat_id: 当前选中的聊天ID
-            current_persona: 当前选择的角色ID
-            on_new_chat: 创建新聊天的回调函数
-            on_chat_selected: 聊天被选择时的回调函数
-            on_logout: 登出按钮点击的回调函数
-            on_persona_change: 角色改变时的回调函数
+            chat_manager: 聊天管理器实例
+        """
+        self.chat_manager = chat_manager
+        self.persona_view = PersonaView()
+    
+    def render(self, 
+              current_user: str,
+              on_chat_selected: Callable[[str, List[Dict[str, str]], str], None],
+              on_new_chat: Callable[[], None],
+              on_persona_selected: Callable[[str], None],
+              on_persona_created: Callable[[Persona], None],
+              on_deep_thinking_toggled: Callable[[bool], None]) -> None:
+        """渲染侧边栏
         
-        Returns:
-            元组 (深度思考模式状态, 当前角色ID)
+        Args:
+            current_user: 当前用户ID
+            on_chat_selected: 选择聊天回调函数
+            on_new_chat: 新建聊天回调函数
+            on_persona_selected: 选择角色回调函数
+            on_persona_created: 创建角色回调函数
+            on_deep_thinking_toggled: 切换深度思考模式回调函数
         """
         with st.sidebar:
-            st.title(f"欢迎, {username}")
+            # 用户信息和新建按钮
+            st.subheader(f"👤 {current_user}")
             
             # 新建对话按钮
-            if st.button("新建对话", key="new_chat"):
+            if st.button("✨ 新建对话", use_container_width=True):
                 on_new_chat()
+                st.rerun()
+            
+            st.divider()
             
             # 聊天历史
-            st.subheader("对话历史")
-            chats = self.chat_manager.get_user_chats(user_id)
+            st.subheader("💬 对话历史")
+            chats = self.chat_manager.get_user_chats(current_user)
             
             for chat in chats:
-                chat_title = chat.get("title", "无标题对话")
-                if st.button(chat_title, key=f"chat_{chat['chat_id']}"):
-                    on_chat_selected(chat["chat_id"])
+                chat_id = chat["chat_id"]
+                title = chat["title"] if "title" in chat and chat["title"] else f"对话 {chat_id[:6]}"
+                
+                if st.button(title, key=chat_id, use_container_width=True):
+                    chat_data = self.chat_manager.load_chat(current_user, chat_id)
+                    if chat_data:
+                        on_chat_selected(
+                            chat_id, 
+                            chat_data["messages"], 
+                            chat_data["persona_id"]
+                        )
+                        st.rerun()
             
-            # 设置区
-            st.subheader("设置")
+            st.divider()
             
-            # 深度思考模式
-            deep_thinking = st.session_state.get("deep_thinking", False)
-            deep_thinking = st.checkbox(
-                "深度思考模式", 
-                value=deep_thinking,
-                help="启用后，AI将会花更多时间思考，给出更详细的回答。"
-            )
-            st.session_state.deep_thinking = deep_thinking
+            # 设置部分
+            st.subheader("⚙️ 设置")
             
             # 角色选择
-            st.subheader("选择角色")
-            persona_options = {p.name: pid for pid, p in self.personas.items()}
-            
-            try:
-                current_persona_name = self.personas[current_persona].name
-                index = list(persona_options.keys()).index(current_persona_name)
-            except (KeyError, ValueError):
-                current_persona_name = list(persona_options.keys())[0]
-                index = 0
-                
-            selected_persona_name = st.selectbox(
-                "选择助手角色",
+            st.subheader("🎭 选择角色")
+            personas = st.session_state.personas
+            persona_options = {p.id: p.name for p in personas}
+            selected_persona = st.selectbox(
+                "角色",
                 options=list(persona_options.keys()),
-                index=index
+                format_func=lambda x: persona_options[x],
+                key="persona_selector"
             )
             
-            selected_persona_id = persona_options[selected_persona_name]
-            if selected_persona_id != current_persona:
-                on_persona_change(selected_persona_id)
+            if selected_persona != st.session_state.selected_persona:
+                on_persona_selected(selected_persona)
             
-            # 退出登录按钮
-            if st.button("退出登录", key="logout"):
-                on_logout()
+            # 在侧边栏显示创建角色的表单
+            with st.expander("创建新角色", expanded=False):
+                self.persona_view.render_creator(on_persona_created)
             
-        return deep_thinking, selected_persona_id 
+            # 深度思考模式切换
+            st.subheader("🧠 思考模式")
+            deep_thinking = st.checkbox("启用深度思考", value=st.session_state.deep_thinking_mode)
+            
+            if deep_thinking != st.session_state.deep_thinking_mode:
+                on_deep_thinking_toggled(deep_thinking)
+                st.rerun() 

@@ -1,0 +1,31 @@
+{
+    "chat_id": "8a008d5d-5577-42ae-b9d1-f17fb746f03d",
+    "messages": [
+        {
+            "role": "user",
+            "content": "你好"
+        },
+        {
+            "role": "user",
+            "content": "重庆今天的温度是多少呀"
+        },
+        {
+            "role": "assistant",
+            "content": "您好！由于我是基于当前时间计算得出的，建议您联网获取时效性较强的信息；如果还有其他问题需要帮助，请随时告诉我！"
+        },
+        {
+            "role": "user",
+            "content": "现在几点呢"
+        },
+        {
+            "role": "assistant",
+            "content": "您好！由于我是基于当前时间计算得出的，建议您联网获取时效性较强的信息；如果还有其他问题需要帮助，请随时告诉我！"
+        }
+    ],
+    "metadata": {
+        "user_id": "Theo",
+        "title": "新对话 2025-07-10 00:46",
+        "persona_id": "default"
+    },
+    "updated_at": "2025-07-10T00:47:15.746848"
+}

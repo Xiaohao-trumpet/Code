@@ -1,13 +1,12 @@
 # 晓昊助手 - 项目完成清单
 
-## 服务器部署
-- [x] 租用一个云服务器 (推荐: 阿里云, 腾讯云, AWS, 或 Digital Ocean)
-- [ ] 安装必要的软件 (Python, Docker)
-- [ ] 安装 Ollama 并配置 DeepSeek-R1:7B 模型
-- [ ] 设置防火墙，开放必要的端口
-- [ ] 配置域名 (如需要)
-- [ ] 设置 HTTPS (如需要)
-- [ ] 修改代码中的 `SERVER_URL_PLACEHOLDER` 为实际服务器地址
+## 公网访问部署
+- [x] ~~租用云服务器~~ 使用ngrok内网穿透技术（更新：已决定使用ngrok方案代替云服务器）
+- [ ] 安装pyngrok库：`pip install pyngrok`
+- [ ] 注册ngrok账号获取授权token：https://dashboard.ngrok.com/signup
+- [ ] 运行应用并启用ngrok：`python run.py --use-ngrok --ngrok-token YOUR_TOKEN`（注意：使用python命令而不是streamlit命令）
+- [ ] 保存生成的公网URL，可用于分享给他人访问
+- [ ] （可选）如需自定义域名，需要升级ngrok付费账号
 
 ## 安全性增强
 - [ ] 实现真正的用户认证系统 (目前只有简单的文件存储)
@@ -23,6 +22,8 @@
 - [ ] 优化大量聊天历史时的加载性能
 
 ## 功能扩展
+- [x] 改进深度思考模式的显示格式
+- [x] 改进登录/注册界面，实现页面切换
 - [ ] 实现对话标题自动生成
 - [ ] 添加对话导出功能
 - [ ] 添加对话删除功能

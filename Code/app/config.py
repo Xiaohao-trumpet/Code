@@ -1,5 +1,6 @@
 import os
 import logging
+import datetime
 from typing import Dict, List
 
 # Base paths
@@ -30,9 +31,9 @@ UI_CONFIG = {
     "initial_sidebar_state": "expanded"
 }
 
-# Default personas
-DEFAULT_PERSONAS = {
-    "general": {
+# Default personas dictionary
+PERSONAS_DATA = {
+    "default": {
         "name": "通用助手",
         "description": "一个通用的AI助手，可以回答各种问题。",
         "system_prompt": "你是一个乐于助人的AI助手。",
@@ -48,6 +49,21 @@ DEFAULT_PERSONAS = {
         "system_prompt": "你是一个法律领域的AI助手，提供法律相关的信息。注意：你不应该提供具体的法律建议，仅提供一般性的法律信息。",
     }
 }
+
+def get_default_personas():
+    """返回默认角色列表，避免循环导入"""
+    from app.models.persona import Persona
+    
+    return [
+        Persona(
+            persona_id=persona_id,
+            name=data["name"],
+            description=data["description"],
+            system_prompt=data["system_prompt"],
+            created_at=datetime.datetime.now().isoformat()
+        )
+        for persona_id, data in PERSONAS_DATA.items()
+    ]
 
 # LLM options
 THINKING_MODE_OPTIONS = {
